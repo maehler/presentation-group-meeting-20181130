@@ -1,0 +1,10 @@
+.slidelink {
+    position: absolute;
+    right: 20px;
+    top: 0;
+    z-index: 10000;
+}
+
+.slidelink a {
+    font-size: 0.5em;
+}

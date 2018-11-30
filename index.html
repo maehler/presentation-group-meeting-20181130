@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-        <title>reveal.js</title>
+        <title>The MARVEL assembler</title>
 
         <link rel="stylesheet" href="css/reveal.css">
         <link rel="stylesheet" href="css/theme/maehler_dark.css">
@@ -29,10 +29,200 @@
         <div class="reveal">
             <div class="slides">
                 <section>
-                    <h1>Slide 1</h1>
+                    <h1>The MARVEL assembler</h1>
+                    <h4>Or how to drive UPPMAX insane</h4>
+                    <small>Niklas Mähler – Group meeting 2018-11-30</small>
                 </section>
+
+                <section data-background-image="https://farm6.staticflickr.com/5690/21457742918_964178f889_o_d.jpg" data-background-opacity="0.2">
+                    <h2>Spruce assembly status</h2>
+                    <ul>
+                        <li>1/3 of alignments done</li>
+                        <li>~350 TB of space used</li>
+                        <li>600,000 CPU hours last 30 days</li>
+                    </ul>
+                </section>
+
+                <section data-background-image="https://screenrant.com/wp-content/uploads/2017/04/Marvel-Legacy-cover-by-Joe-Quesada-art.jpg" data-background-opacity="0.3">
+                    <h2>MARVEL overview</h2>
+                    <ul>
+                        <li>Assembly of PacBio reads</li>
+                        <li>Designed with repeats in mind</li>
+                        <li>UNIX mindset</li>
+                        <li>Many tools from the <a href="https://dazzlerblog.wordpress.com/">dazzler</a> suite from Gene Myers</li>
+                    </ul>
+                </section>
+
                 <section>
-                    <h1>Slide 2</h1>
+                    <section>
+                        <h2>PacBio</h2>
+                    </section>
+                    
+                    <section>
+                        <ul>
+                            <li>Single-molecule real-time sequencing (SMRT)</li>
+                            <li>Long (average read length up to 30 kbases)</li>
+                            <li>Noisy (error rate 10-15%)</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <img class="stretch" src="https://upload.wikimedia.org/wikipedia/commons/6/6d/SequelSmrtCell.jpg" alt="Sequel SMRT cell">
+                    </section>
+
+                    <section>
+                        <img class="stretch" src="img/pacbio.png" alt="SMRT sequencing">
+                    </section>
+                </section>
+
+                <section>
+                    <h2>MARVEL workflow</h2>
+                    <ul>
+                        <li>Read overlap</li>
+                        <li>Patching of reads</li>
+                        <li>Overlap again</li>
+                        <li>Scrubbing of reads</li>
+                        <li>Graph construction</li>
+                        <li>Read correction</li>
+                        <li>Consensus calling</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Data preparation</h2>
+                        <aside class="notes">
+                            Of course, no bioinformatics tool is complete without a data format of its own.
+                        </aside>
+                    </section>
+
+                    <section>
+                        <h2>Splitting data into blocks</h2>
+                        <ul>
+                            <li>Compressed binary file with base pairs</li>
+                            <li>Index with read metadata</li>
+                            <li>Block information</li>
+                        </ul>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Overlapping</h2>
+                    </section>
+
+                    <section>
+                        <ul>
+                            <li><code>daligner</code></li>
+                            <li>Pairwise alignment of all reads</li>
+                            <li>Done per block</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Pre-filtering</h2>
+                        <ul>
+                            <li><i>k</i>-mer strategy</li>
+                            <li>Looks stretches of exact <i>k</i>-mer matches</li>
+                            <li>If a long enough stretch is found, the reads are aligned</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Output</h2>
+                        <ul>
+                            <li>Sparsely encoded</li>
+                            <li>Trace points every 100 base pair</li>
+                            <li>Two files for each block: not symmetric</li>
+                        </ul>
+                        <aside class="notes">
+                            Trace points: offset and number of differences (edit distance)
+                        </aside>
+                    </section>
+
+                    <section>
+                        <h2>What about repeats?</h2>
+                        <aside class="notes">
+                            I thought you'd never ask!
+                        </aside>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Masking server</h2>
+                    </section>
+
+                    <section>
+                        <ul>
+                            <li>Reads alignment files when they're done</li>
+                            <li>Updates coverage statistics</li>
+                            <li><code>daligner</code> requests information for blocks</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <img src="img/masking1.png">
+                    </section>
+
+                    <section>
+                        <img src="img/masking2.png">
+                    </section>
+                </section>
+
+                <section>
+                    <img class="stretch" src="img/many-hours-later.png" alt="1.7 million hours later">
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Patching</h2>
+                    </section>
+
+                    <section>
+                        <ul>
+                            <li>Instead of read correction</li>
+                            <li>Replace large scale errors</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Low quality regions</h2>
+                        <p>Fixed by replacing the region with any read that spans it</p>
+                        <aside class="notes">
+                            Identified by looking at the identity of alignments to that region.
+                        </aside>
+                    </section>
+
+                    <section>
+                        <h2>Region not spanned by any alignment</h2>
+                        <ul>
+                            <li>Look at reads left and right</li>
+                            <li>Are they the same?</li>
+                            <li>Is the gap size similar?</li>
+                            <li>Replace region with one of these reads</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <img class="stretch" src="https://dazzlerblog.files.wordpress.com/2017/04/screen-shot-2017-04-18-at-9-53-53-am.png" alt="Region not spanned by an alignment">
+                        <aside class="notes">
+                            This is from the dazzlerblog.
+                        </aside>
+                    </section>
+                </section>
+
+                <section>
+                    <h2>Overlap again</h2>
+                </section>
+
+                <section>
+                    <img class="stretch" src="img/many-hours-later.png" alt="1.7 million hours later">
+                </section>
+
+                <section>
+                    <h2>Scrubbing</h2>
+
                 </section>
             </div>
         </div>

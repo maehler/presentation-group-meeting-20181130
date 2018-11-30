@@ -8,3 +8,9 @@
 .slidelink a {
     font-size: 0.5em;
 }
+
+.reveal .slides section img {
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+}
